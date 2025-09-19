@@ -18,7 +18,7 @@ export default function App() {
         setLoading(true);
         setData([]);
 
-        // 필터별 publishedAfter 계산
+        // 📌 필터별 publishedAfter 계산
         let publishedAfter = "";
         const now = new Date();
         if (filter === "today") now.setDate(now.getDate() - 1);
@@ -50,8 +50,8 @@ export default function App() {
 
     return (
         <div className="p-6">
-            {/* 🔍 검색창 영역 */}
-            <div className="flex justify-center items-center space-x-2">
+            {/* 🔍 검색창: 기존 유지 + 중앙 정렬 */}
+            <div className="flex justify-center items-center space-x-2 mb-4">
                 <input
                     type="text"
                     value={query}
@@ -81,9 +81,9 @@ export default function App() {
             {/* 로딩 표시 */}
             {loading && <p className="text-center mt-4">검색 중...</p>}
 
-            {/* 📊 결과 테이블 */}
+            {/* 📊 검색 결과: 기존 유지 + 스크롤 박스 추가 */}
             {data.length > 0 && (
-                <div className="overflow-x-auto max-h-[600px] overflow-y-scroll border rounded mt-6">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-scroll border rounded">
                     <table className="min-w-full text-sm text-left">
                         <thead className="bg-gray-100 sticky top-0">
                         <tr>
@@ -103,13 +103,13 @@ export default function App() {
                             <tr key={i} className="border-t hover:bg-gray-50">
                                 <td className="p-2">{v.channelTitle}</td>
                                 <td className="p-2">{v.title}</td>
-                                <td className="p-2">{new Date(v.uploadedAt).toLocaleString()}</td>
+                                <td className="p-2">
+                                    {new Date(v.uploadedAt).toLocaleString()}
+                                </td>
                                 <td className="p-2">{v.viewCount.toLocaleString()}</td>
                                 <td className="p-2">{v.viewsPerHour}</td>
                                 <td className="p-2">{formatSubscribers(v.subscriberCount)}</td>
-                                <td className="p-2">
-                                    {v.viewToSubRatio ? v.viewToSubRatio : "N/A"}
-                                </td>
+                                <td className="p-2">{v.viewToSubRatio || "N/A"}</td>
                                 <td className="p-2">{v.durationHMS}</td>
                                 <td className="p-2">
                                     <a
