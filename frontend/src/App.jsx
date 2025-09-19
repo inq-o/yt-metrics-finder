@@ -1,15 +1,7 @@
 import { useState } from "react";
 
-function formatSubscribers(n) {
-    if (!n && n !== 0) return "비공개";
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
-    if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-    return n.toString();
-}
-
 export default function App() {
     const [query, setQuery] = useState("");
-    const [filter, setFilter] = useState("any"); // 업로드 날짜 필터
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
 
@@ -18,15 +10,6 @@ export default function App() {
         setLoading(true);
         setData([]);
 
-        // 📌 필터별 publishedAfter 계산
-        let publishedAfter = "";
-        const now = new Date();
-        if (filter === "today") now.setDate(now.getDate() - 1);
-        if (filter === "week") now.setDate(now.getDate() - 7);
-        if (filter === "month") now.setMonth(now.getMonth() - 1);
-        if (filter === "year") now.setFullYear(now.getFullYear() - 1);
-        if (filter !== "any") publishedAfter = now.toISOString();
-
         try {
             const params = new URLSearchParams({
                 q: query,
@@ -34,7 +17,6 @@ export default function App() {
                 order: "viewCount",
                 regionCode: "KR",
             });
-            if (publishedAfter) params.append("publishedAfter", publishedAfter);
 
             const res = await fetch(
                 `${import.meta.env.VITE_API_BASE}/api/search?${params.toString()}`
@@ -50,8 +32,8 @@ export default function App() {
 
     return (
         <div className="p-6">
-            {/* 🔍 검색창: 기존 유지 + 중앙 정렬 */}
-            <div className="flex justify-center items-center space-x-2 mb-4">
+            {/* 🔍 검색창 */}
+            <div className="flex space-x-2 mb-4">
                 <input
                     type="text"
                     value={query}
@@ -59,17 +41,6 @@ export default function App() {
                     placeholder="검색어 입력..."
                     className="w-1/2 p-2 border rounded"
                 />
-                <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="p-2 border rounded"
-                >
-                    <option value="any">전체</option>
-                    <option value="today">오늘</option>
-                    <option value="week">1주일</option>
-                    <option value="month">1개월</option>
-                    <option value="year">1년</option>
-                </select>
                 <button
                     onClick={handleSearch}
                     className="px-4 py-2 bg-blue-500 text-white rounded"
@@ -79,53 +50,53 @@ export default function App() {
             </div>
 
             {/* 로딩 표시 */}
-            {loading && <p className="text-center mt-4">검색 중...</p>}
+            {loading && <p className="mt-4">검색 중...</p>}
 
-            {/* 📊 검색 결과: 기존 유지 + 스크롤 박스 추가 */}
+            {/* 📊 검색 결과 */}
             {data.length > 0 && (
-                <div className="overflow-x-auto max-h-[600px] overflow-y-scroll border rounded">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-100 sticky top-0">
-                        <tr>
-                            <th className="p-2">채널명</th>
-                            <th className="p-2">제목</th>
-                            <th className="p-2">업로드일</th>
-                            <th className="p-2">조회수</th>
-                            <th className="p-2">시간당 조회수</th>
-                            <th className="p-2">구독자수</th>
-                            <th className="p-2">구독자수 대비 조회수</th>
-                            <th className="p-2">영상길이</th>
-                            <th className="p-2">링크</th>
+                <table className="min-w-full text-sm text-left border mt-6">
+                    <thead className="bg-gray-100">
+                    <tr>
+                        <th className="p-2">채널명</th>
+                        <th className="p-2">제목</th>
+                        <th className="p-2">업로드일</th>
+                        <th className="p-2">조회수</th>
+                        <th className="p-2">시간당 조회수</th>
+                        <th className="p-2">구독자수</th>
+                        <th className="p-2">구독자수 대비 조회수</th>
+                        <th className="p-2">영상길이</th>
+                        <th className="p-2">링크</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {data.map((v, i) => (
+                        <tr key={i} className="border-t hover:bg-gray-50">
+                            <td className="p-2">{v.channelTitle}</td>
+                            <td className="p-2">{v.title}</td>
+                            <td className="p-2">
+                                {new Date(v.uploadedAt).toLocaleString()}
+                            </td>
+                            <td className="p-2">{v.viewCount.toLocaleString()}</td>
+                            <td className="p-2">{v.viewsPerHour}</td>
+                            <td className="p-2">
+                                {v.subscriberCount ? v.subscriberCount.toLocaleString() : "비공개"}
+                            </td>
+                            <td className="p-2">{v.viewToSubRatio || "N/A"}</td>
+                            <td className="p-2">{v.durationHMS}</td>
+                            <td className="p-2">
+                                <a
+                                    href={v.videoUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-blue-500 underline"
+                                >
+                                    보기
+                                </a>
+                            </td>
                         </tr>
-                        </thead>
-                        <tbody>
-                        {data.map((v, i) => (
-                            <tr key={i} className="border-t hover:bg-gray-50">
-                                <td className="p-2">{v.channelTitle}</td>
-                                <td className="p-2">{v.title}</td>
-                                <td className="p-2">
-                                    {new Date(v.uploadedAt).toLocaleString()}
-                                </td>
-                                <td className="p-2">{v.viewCount.toLocaleString()}</td>
-                                <td className="p-2">{v.viewsPerHour}</td>
-                                <td className="p-2">{formatSubscribers(v.subscriberCount)}</td>
-                                <td className="p-2">{v.viewToSubRatio || "N/A"}</td>
-                                <td className="p-2">{v.durationHMS}</td>
-                                <td className="p-2">
-                                    <a
-                                        href={v.videoUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-blue-500 underline"
-                                    >
-                                        보기
-                                    </a>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
+                    ))}
+                    </tbody>
+                </table>
             )}
         </div>
     );
