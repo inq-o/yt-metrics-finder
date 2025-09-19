@@ -17,16 +17,23 @@ async function ytGet(path, params) {
 }
 
 
-export async function searchVideos({ q, maxResults = 20, order = "viewCount", regionCode = "KR" }) {
-    const data = await ytGet("search", {
+export async function searchVideos({ q, maxResults = 20, order = "viewCount", regionCode = "KR", publishedAfter }) {
+    const params = {
         part: "snippet",
         q,
         type: "video",
-        maxResults: Math.min(Math.max(Number(maxResults) || 20, 1), 50),
+        maxResults,
         order,
         regionCode,
-    });
-    return (data.items || []).map(it => it.id?.videoId).filter(Boolean);
+        key: process.env.YOUTUBE_API_KEY,
+    };
+
+    if (publishedAfter) {
+        params.publishedAfter = publishedAfter; // ✅ 필터 반영
+    }
+
+    const { data } = await axios.get(`${BASE}/search`, { params });
+    return data.items.map((it) => it.id.videoId).filter(Boolean);
 }
 
 
